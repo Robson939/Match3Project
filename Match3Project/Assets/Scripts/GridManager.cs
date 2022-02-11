@@ -42,6 +42,11 @@ public class GridManager : MonoBehaviour
 
     private void GameEvents_OnBeginSwap((byte, byte) tile)
     {
+        if (!allowUserAction)
+        {
+            return;
+        }
+        
         TileTypeEnum tileType = tileFrames[tile.Item1, tile.Item2].tile.GetTileSO().tileType;
 
         if (tileType != TileTypeEnum.Normal)
@@ -60,25 +65,21 @@ public class GridManager : MonoBehaviour
             {
                 scoreHolder += tileFrames[tileItem.Item1, tileItem.Item2].tile.GetTileSO().scoreValue;
                 tileFrames[tileItem.Item1, tileItem.Item2].tile.SetTileSO(tilesSO[Random.Range(0, tilesSO.Count)]);
-                effectSequence.Insert(0, tileFrames[tileItem.Item1, tileItem.Item2].tile.icon.transform.DOPunchScale(new Vector3(1.3f, 1.3f, 1.3f), 1f));
+                tileFrames[tileItem.Item1, tileItem.Item2].tile.icon.transform.DOKill();
+                effectSequence.Insert(0, tileFrames[tileItem.Item1, tileItem.Item2].tile.icon.transform.DOPunchScale(new Vector3(1.3f, 1.3f, 1.3f), 1f).OnKill(() => tileFrames[tileItem.Item1, tileItem.Item2].tile.icon.transform.localScale = Vector3.one));
             }
 
             GameManager.Instance.Score += scoreHolder;
             effectSequence.OnComplete(() => allowUserAction = true);
-
-            return;
         }
-
-        if (!allowUserAction)
+        else
         {
-            return;
+            tileFrames[tile.Item1, tile.Item2].tile.icon.transform.
+                DOScale(new Vector2(1.3f, 1.3f), 0.5f).
+                SetEase(Ease.Flash).
+                SetLoops(-1, LoopType.Yoyo).
+                OnKill(() => tileFrames[tile.Item1, tile.Item2].tile.icon.transform.localScale = Vector3.one);
         }
-
-        tileFrames[tile.Item1, tile.Item2].tile.icon.transform.
-            DOScale(new Vector2(1.3f, 1.3f), 0.5f).
-            SetEase(Ease.Flash).
-            SetLoops(-1, LoopType.Yoyo).
-            OnKill(() => tileFrames[tile.Item1, tile.Item2].tile.icon.transform.localScale = new Vector2(1, 1));
     }
     private void GameEvents_OnKeepSwap((byte, byte) tileOrigin, DirectionEnum direction)
     {
@@ -106,7 +107,7 @@ public class GridManager : MonoBehaviour
                     DOScale(new Vector2(1.3f, 1.3f), 1).
                     SetEase(Ease.Flash).
                     SetLoops(-1, LoopType.Yoyo).
-                    OnKill(() => TemporaryTargetTileFrame.tile.icon.transform.localScale = new Vector2(1, 1));
+                    OnKill(() => TemporaryTargetTileFrame.tile.icon.transform.localScale = Vector3.one);
             }
         }
         else
@@ -197,6 +198,7 @@ public class GridManager : MonoBehaviour
                         tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.SetTileSO(tileSO2);
 
                         tempFramePositon = null;
+                        allowUserAction = true;
                     });
                 }
                 else
@@ -206,19 +208,20 @@ public class GridManager : MonoBehaviour
 
                     int scoreHolder = 0;
 
+                    Sequence newTilesSequence = DOTween.Sequence();
+
                     foreach ((byte, byte) tile in match1)
                     {
                         scoreHolder += tileFrames[tile.Item1, tile.Item2].tile.GetTileSO().scoreValue;
 
                         tileFrames[tile.Item1, tile.Item2].tile.SetTileSO(tilesSO[Random.Range(0, tilesSO.Count)]);
-
-                        tileFrames[tile.Item1, tile.Item2].tile.icon.transform.DOPunchScale(new Vector3(1.3f,1.3f, 1.3f), 1f);
+                        tileFrames[tile.Item1, tile.Item2].tile.icon.transform.DOKill();
+                        newTilesSequence.Insert(0, tileFrames[tile.Item1, tile.Item2].tile.icon.transform.DOPunchScale(new Vector3(1.3f,1.3f, 1.3f), 1f).OnKill(() => tileFrames[tile.Item1, tile.Item2].tile.icon.transform.localScale = Vector3.one));
                     }
+                    newTilesSequence.OnComplete(() => allowUserAction = true);
 
                     GameManager.Instance.Score += scoreHolder;
-                }
-
-                allowUserAction = true;
+                }            
             });
         }
     }

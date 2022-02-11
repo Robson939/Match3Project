@@ -21,6 +21,7 @@ public class ScoreUI : MonoBehaviour
     private void GameEvents_OnObtainScore(int amount)
     {
         scoreText.text = amount.ToString();
-        scoreText.rectTransform.DOPunchScale(new Vector3(1.1f, 1.2f, 1.1f), 2f);
+        scoreText.rectTransform.DOKill();
+        scoreText.rectTransform.DOPunchScale(new Vector3(1.1f, 1.2f, 1.1f), 2f).OnKill(() => scoreText.rectTransform.localScale = Vector3.one);
     }
 }

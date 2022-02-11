@@ -14,7 +14,6 @@ ScriptsOnlyBuild:
     - UnityEditor.U2D.Animation.BoneGizmo
     Unity.2D.IK.Editor.dll:
     - UnityEditor.U2D.IK.IKEditorManager
-    - UnityEditor.U2D.IK.IKGizmos
     Unity.2D.IK.Runtime.dll:
     - UnityEditor.U2D.IK.IKEditorManagerHelper
     Unity.2D.Tilemap.Editor.dll:
@@ -65,25 +64,25 @@ ScriptsOnlyBuild:
     - Class: 114
       Script: {instanceID: 2772}
     - Class: 114
-      Script: {instanceID: 3442}
+      Script: {instanceID: 3444}
     - Class: 114
-      Script: {instanceID: 4848}
+      Script: {instanceID: 4852}
     - Class: 114
-      Script: {instanceID: 5214}
+      Script: {instanceID: 5218}
     - Class: 114
-      Script: {instanceID: 5472}
+      Script: {instanceID: 5288}
     - Class: 114
-      Script: {instanceID: 5542}
+      Script: {instanceID: 5478}
     - Class: 114
-      Script: {instanceID: 5808}
+      Script: {instanceID: 5548}
     - Class: 114
-      Script: {instanceID: 6316}
+      Script: {instanceID: 5814}
     - Class: 114
-      Script: {instanceID: 7570}
+      Script: {instanceID: 6322}
     - Class: 114
-      Script: {instanceID: 7936}
+      Script: {instanceID: 7580}
     - Class: 114
-      Script: {instanceID: 35156}
+      Script: {instanceID: 7946}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -673,6 +672,12 @@ ScriptsOnlyBuild:
     className: GameManager
   - hash:
       serializedVersion: 2
+      Hash: fd603770689195d8c21e05ad28422d62
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: ScoreUI
+  - hash:
+      serializedVersion: 2
       Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
     assemblyName: Unity.VisualScripting.Core.dll
     namespaceName: Unity.VisualScripting
@@ -1037,12 +1042,6 @@ ScriptsOnlyBuild:
     assemblyName: Unity.VisualScripting.Core.dll
     namespaceName: Unity.VisualScripting
     className: UnityOnSliderValueChangedMessageListener
-  - hash:
-      serializedVersion: 2
-      Hash: fd603770689195d8c21e05ad28422d62
-    assemblyName: Assembly-CSharp.dll
-    namespaceName: 
-    className: ScoreUI
   platform: 19
   scenePathNames:
   - Assets/Scenes/Game.unity
