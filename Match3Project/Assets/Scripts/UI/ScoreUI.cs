@@ -22,6 +22,6 @@ public class ScoreUI : MonoBehaviour
     {
         scoreText.text = amount.ToString();
         scoreText.rectTransform.DOKill();
-        scoreText.rectTransform.DOPunchScale(new Vector3(1.05f, 1.05f, 1.05f), 2f).OnKill(() => scoreText.rectTransform.localScale = Vector3.one);
+        scoreText.rectTransform.DOPunchScale(new Vector3(1.05f, 1.05f, 1.05f), 1.3f, 3, 0).OnKill(() => scoreText.rectTransform.localScale = Vector3.one);
     }
 }

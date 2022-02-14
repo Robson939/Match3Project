@@ -56,20 +56,20 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\GridController.cs" />
-    <Compile Include="Assets\Scripts\TileEffectFactory.cs" />
-    <Compile Include="Assets\Scripts\DirectionEnum.cs" />
-    <Compile Include="Assets\Scripts\TileTypeEnum.cs" />
+    <Compile Include="Assets\Scripts\Grid\GridController.cs" />
+    <Compile Include="Assets\Scripts\Grid\Tile\TileEffectFactory.cs" />
+    <Compile Include="Assets\Scripts\Enums\DirectionEnum.cs" />
+    <Compile Include="Assets\Scripts\Enums\TileTypeEnum.cs" />
     <Compile Include="Assets\Scripts\GameEvents.cs" />
-    <Compile Include="Assets\Scripts\ITileEffect.cs" />
-    <Compile Include="Assets\Scripts\TileSO.cs" />
+    <Compile Include="Assets\Scripts\Grid\Tile\ITileEffect.cs" />
+    <Compile Include="Assets\Scripts\SO\TileSO.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
-    <Compile Include="Assets\Scripts\ScoreUI.cs" />
-    <Compile Include="Assets\Scripts\Tile.cs" />
-    <Compile Include="Assets\Scripts\TileEffectTakeAround.cs" />
-    <Compile Include="Assets\Scripts\TileEffectTakeAllById.cs" />
-    <Compile Include="Assets\Scripts\GridManager.cs" />
-    <Compile Include="Assets\Scripts\TileFrame.cs" />
+    <Compile Include="Assets\Scripts\UI\ScoreUI.cs" />
+    <Compile Include="Assets\Scripts\Grid\Tile\Tile.cs" />
+    <Compile Include="Assets\Scripts\Grid\Tile\TileEffectTakeAround.cs" />
+    <Compile Include="Assets\Scripts\Grid\Tile\TileEffectTakeAllById.cs" />
+    <Compile Include="Assets\Scripts\Grid\GridManager.cs" />
+    <Compile Include="Assets\Scripts\Grid\Tile\TileFrame.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

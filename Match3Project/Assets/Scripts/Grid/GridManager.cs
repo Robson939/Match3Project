@@ -18,7 +18,7 @@ public class GridManager : MonoBehaviour
     private List<TileSO> tilesSO = new List<TileSO>();
     private List<TileSO> temporarySpecialTileSOs = new List<TileSO>();
     private List<(TileTypeEnum, int)> temporaryTilesToAvoid = new List<(TileTypeEnum, int)>();
-
+    private Vector3 tilePunchScale = new Vector3(1.2f, 1.2f, 1.2f);
 
     public void OnEnable()
     {
@@ -56,30 +56,30 @@ public class GridManager : MonoBehaviour
         if (tileType != TileTypeEnum.Normal)
         {
             ITileEffect tileEffect = TileEffectFactory.GetEffect(tileType);
-
             List<(byte, byte)> effectResult = tileEffect.Effect(tile, tileFrames);
-
             Sequence effectSequence = DOTween.Sequence();
+            int scoreHolder = 0;
 
             allowUserAction = false;
-
-            int scoreHolder = 0;
 
             foreach ((byte, byte) tileItem in effectResult)
             {
                 scoreHolder += tileFrames[tileItem.Item1, tileItem.Item2].tile.GetTileSO().scoreValue;
-                tileFrames[tileItem.Item1, tileItem.Item2].tile.SetTileSO(tilesSO[Random.Range(0, tilesSO.Count)]);
-                tileFrames[tileItem.Item1, tileItem.Item2].tile.icon.transform.DOKill();
-                effectSequence.Insert(0, tileFrames[tileItem.Item1, tileItem.Item2].tile.icon.transform.DOPunchScale(new Vector3(1.3f, 1.3f, 1.3f), 1f).OnKill(() => tileFrames[tileItem.Item1, tileItem.Item2].tile.icon.transform.localScale = Vector3.one));
+
+                SetNewTile(effectSequence, tileItem, tilesSO);
             }
 
             GameManager.Instance.Score += scoreHolder;
-            effectSequence.OnComplete(() => allowUserAction = true);
+
+            effectSequence.OnComplete(() =>
+            {
+                TryHandleBoardAfterFill(effectResult);
+            });
         }
         else
         {
             tileFrames[tile.Item1, tile.Item2].tile.icon.transform.
-                DOScale(new Vector2(1.3f, 1.3f), 0.5f).
+                DOScale(tilePunchScale, 0.5f).
                 SetEase(Ease.Flash).
                 SetLoops(-1, LoopType.Yoyo).
                 OnKill(() => tileFrames[tile.Item1, tile.Item2].tile.icon.transform.localScale = Vector3.one);
@@ -108,7 +108,7 @@ public class GridManager : MonoBehaviour
                 TemporaryTargetTileFrame?.tile.icon.transform.DOKill();
                 tempFramePositon = new GridPosition(posX, posY);
                 TemporaryTargetTileFrame.tile.icon.transform.
-                    DOScale(new Vector2(1.3f, 1.3f), 1).
+                    DOScale(tilePunchScale, 1).
                     SetEase(Ease.Flash).
                     SetLoops(-1, LoopType.Yoyo).
                     OnKill(() => TemporaryTargetTileFrame.tile.icon.transform.localScale = Vector3.one);
@@ -218,13 +218,14 @@ public class GridManager : MonoBehaviour
                     {
                         scoreHolder += tileFrames[tile.Item1, tile.Item2].tile.GetTileSO().scoreValue;
 
-                        tileFrames[tile.Item1, tile.Item2].tile.SetTileSO(tilesSO[Random.Range(0, tilesSO.Count)]);
-                        tileFrames[tile.Item1, tile.Item2].tile.icon.transform.DOKill();
-                        newTilesSequence.Insert(0, tileFrames[tile.Item1, tile.Item2].tile.icon.transform.DOPunchScale(new Vector3(1.3f,1.3f, 1.3f), 1f).OnKill(() => tileFrames[tile.Item1, tile.Item2].tile.icon.transform.localScale = Vector3.one));
+                        SetNewTile(newTilesSequence, tile, tilesSO);
                     }
-                    newTilesSequence.OnComplete(() => allowUserAction = true);
 
                     GameManager.Instance.Score += scoreHolder;
+
+                    newTilesSequence.OnComplete(() => {
+                        TryHandleBoardAfterFill(new List < (byte, byte) > (match1));
+                    });
                 }            
             });
         }
@@ -232,6 +233,53 @@ public class GridManager : MonoBehaviour
 
     #endregion
         
+
+    private void SetNewTile(Sequence sequenceRef, (byte, byte) tilePos, List<TileSO> randomPool)
+    {
+        tileFrames[tilePos.Item1, tilePos.Item2].tile.SetTileSO(randomPool[Random.Range(0, randomPool.Count)]);
+        tileFrames[tilePos.Item1, tilePos.Item2].tile.icon.transform.DOKill();
+
+        sequenceRef.Insert(0, tileFrames[tilePos.Item1, tilePos.Item2].tile.icon.transform.DOPunchScale(tilePunchScale, 1, 5, .3f).OnKill(() => tileFrames[tilePos.Item1, tilePos.Item2].tile.icon.transform.localScale = Vector3.one));
+    }
+
+    private void TryHandleBoardAfterFill(List<(byte, byte)> newTiles)
+    {
+        HashSet<(byte, byte)> newMatch = new HashSet<(byte, byte)>();
+        Sequence newTilesSequence = DOTween.Sequence();
+        int scoreHolder = 0;
+
+        foreach ((byte, byte) tile in newTiles)
+        {
+            if (tileFrames[tile.Item1, tile.Item2].tile.GetTileSO().tileType != TileTypeEnum.Normal)
+            {
+                continue;
+            }
+
+            TryHandleMatch(tileFrames[tile.Item1, tile.Item2], out HashSet<(byte, byte)> tempMatch);
+            newMatch.UnionWith(tempMatch);
+        }
+
+        if (newMatch.Count > 0)
+        {
+            foreach ((byte, byte) tile in newMatch)
+            {
+                scoreHolder += tileFrames[tile.Item1, tile.Item2].tile.GetTileSO().scoreValue;
+
+                SetNewTile(newTilesSequence, tile, tilesSO);
+            }
+
+            GameManager.Instance.Score += scoreHolder;
+
+            newTilesSequence.OnComplete(() => {
+                TryHandleBoardAfterFill(new List<(byte, byte)>(newMatch));
+            });
+        }
+        else
+        {
+            allowUserAction = true;
+        }
+    }
+
     private void GenerateBoard()
     {
         List<TileSO> tilesSO = GameManager.Instance.GetTilesSO();
@@ -263,7 +311,7 @@ public class GridManager : MonoBehaviour
 
     private (sbyte, sbyte) GetValueByDirectionEnum(DirectionEnum direction)
     {
-         if (direction == DirectionEnum.Right)
+        if (direction == DirectionEnum.Right)
         {
             return  (1, 0);
         }
