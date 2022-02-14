@@ -9,8 +9,8 @@ public class TileFrame : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDra
     public GridPosition pos;
     public Tile tile;
 
-    private Vector2 startDragPos = new Vector2();
     [SerializeField] private Canvas canvas;
+    private Vector2 startDragPos = new Vector2();
 
     #region touch
 
@@ -21,12 +21,7 @@ public class TileFrame : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDra
     public void OnPointerDown(PointerEventData eventData)
     {
         startDragPos = eventData.pressPosition;
-
-        //Debug.Log($"{this.name} startPos: {startDragPos}");
-
         GameEvents.BeginSwap((pos.x, pos.y));
-
-        //tile.transform.DOScale(new Vector2(1.3f, 1.3f), 2).SetLoops(-1, LoopType.Yoyo);
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -40,7 +35,6 @@ public class TileFrame : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDra
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        //Debug.Log($"{this.name} endDrag: {eventData.position}");
         DirectionEnum targetTileDirection = GetDirectionOfTarget((eventData.position - startDragPos).normalized);
 
         GameEvents.FinishSwap((pos.x, pos.y), targetTileDirection);
@@ -55,12 +49,10 @@ public class TileFrame : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDra
     {
         if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))    //horizontal
         {
-            //Debug.Log(direction.x > 0 ? "Right" : "Left");
             return direction.x > 0 ? DirectionEnum.Right : DirectionEnum.Left;
         }
         else   //vertical
         {
-            //Debug.Log(direction.y > 0 ? "Up" : "Down");
             return direction.y > 0 ? DirectionEnum.Up : DirectionEnum.Down;
         }
     }

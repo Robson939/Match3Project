@@ -16,6 +16,8 @@ public class GridManager : MonoBehaviour
     private (sbyte, sbyte)[] directionValues = new (sbyte, sbyte)[] { (1, 0), (-1, 0), (0, 1), (0, -1) };
     private Queue<(byte, byte)> queue = new Queue<(byte, byte)>();
     private List<TileSO> tilesSO = new List<TileSO>();
+    private List<TileSO> temporarySpecialTileSOs = new List<TileSO>();
+    private List<(TileTypeEnum, int)> temporaryTilesToAvoid = new List<(TileTypeEnum, int)>();
 
 
     public void OnEnable()
@@ -33,8 +35,10 @@ public class GridManager : MonoBehaviour
 
     public void Start()
     {
-        GenerateBoard();
         tilesSO = GameManager.Instance.GetTilesSO();
+
+        GenerateBoard();
+
         sideSize = (byte)tileFrames.GetLength(0);
     }
 
@@ -154,23 +158,23 @@ public class GridManager : MonoBehaviour
 
             Sequence swapSequence = DOTween.Sequence();
 
-            swapSequence.
-                Append(tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.icon.transform.DOMove(pos1, .5f)).
-                Insert(0, TemporaryTargetTileFrame.tile.icon.transform.DOMove(pos2, .5f));
-
             swapSequence.OnStart(() => {
                 
                 tileFrames[tileOrigin.Item1, tileOrigin.Item2].OverrideSorting(true);
             });
 
+            swapSequence.
+                Append(tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.icon.transform.DOMove(pos1, .5f)).
+                Insert(0, TemporaryTargetTileFrame.tile.icon.transform.DOMove(pos2, .5f));
+
             swapSequence.OnComplete(() => {
                 tileFrames[tileOrigin.Item1, tileOrigin.Item2].OverrideSorting(false);
 
-                TemporaryTargetTileFrame.tile.icon.transform.localPosition = Vector3.zero;
                 tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.icon.transform.localPosition = Vector3.zero;
-
-                TemporaryTargetTileFrame.tile.SetTileSO(tileSO2);
                 tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.SetTileSO(tileSO1);
+
+                TemporaryTargetTileFrame.tile.icon.transform.localPosition = Vector3.zero;
+                TemporaryTargetTileFrame.tile.SetTileSO(tileSO2);
 
                 bool result1 = TryHandleMatch(tileFrames[tileOrigin.Item1, tileOrigin.Item2], out HashSet<(byte, byte)> match1);
                 bool result2 = TryHandleMatch(TemporaryTargetTileFrame, out HashSet<(byte, byte)> match2);
@@ -179,23 +183,23 @@ public class GridManager : MonoBehaviour
                 {
                     Sequence unswapSequence = DOTween.Sequence();
 
-                    unswapSequence.
-                        Append(tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.icon.transform.DOMove(pos2, .25f)).
-                        Insert(0, TemporaryTargetTileFrame.tile.icon.transform.DOMove(pos1, .25f));
-
                     unswapSequence.OnStart(() => {
                         tileFrames[tileOrigin.Item1, tileOrigin.Item2].OverrideSorting(true);
                     });
+
+                    unswapSequence.
+                        Append(tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.icon.transform.DOMove(pos1, .25f)).
+                        Insert(0, TemporaryTargetTileFrame.tile.icon.transform.DOMove(pos2, .25f));
 
                     unswapSequence.OnComplete(() =>
                     {
                         tileFrames[tileOrigin.Item1, tileOrigin.Item2].OverrideSorting(false);
 
-                        TemporaryTargetTileFrame.tile.icon.transform.localPosition = Vector3.zero;
                         tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.icon.transform.localPosition = Vector3.zero;
-
-                        TemporaryTargetTileFrame.tile.SetTileSO(tileSO1);
                         tileFrames[tileOrigin.Item1, tileOrigin.Item2].tile.SetTileSO(tileSO2);
+
+                        TemporaryTargetTileFrame.tile.icon.transform.localPosition = Vector3.zero;
+                        TemporaryTargetTileFrame.tile.SetTileSO(tileSO1);
 
                         tempFramePositon = null;
                         allowUserAction = true;
@@ -233,13 +237,25 @@ public class GridManager : MonoBehaviour
         List<TileSO> tilesSO = GameManager.Instance.GetTilesSO();
             
         tileFrames = GameEvents.GetGrid();
-
-        for (int x=0; x<tileFrames.GetLength(0); x++)
+            
+        for (int y=0; y<tileFrames.GetLength(1); y++)
         {
-            for (int y=0; y<tileFrames.GetLength(1); y++)
+            for (int x=0; x<tileFrames.GetLength(0); x++)
             {
                 Tile tile = Instantiate(tilePrefab, tileFrames[x, y].transform);
-                tile.SetTileSO(tilesSO[Random.Range(0, tilesSO.Count)]);
+                TileSO tileSO = null;
+
+                if (x != 0 && y != 0)
+                {
+                    SetSpecialTileSOs(tileFrames[x, y]);
+                    tileSO = temporarySpecialTileSOs[Random.Range(0, temporarySpecialTileSOs.Count)];
+                }
+                else
+                {
+                    tileSO = tilesSO[Random.Range(0, tilesSO.Count)];
+                }
+
+                tile.SetTileSO(tileSO);
                 tileFrames[x, y].tile = tile;
             }
         }
@@ -269,7 +285,7 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    public bool TryHandleMatch(TileFrame tileFrame, out HashSet<(byte, byte)> result)
+    private bool TryHandleMatch(TileFrame tileFrame, out HashSet<(byte, byte)> result)
     {
         result = BFS((tileFrame.pos.x, tileFrame.pos.y));
 
@@ -336,5 +352,44 @@ public class GridManager : MonoBehaviour
         }
 
         return visited;
+    }
+
+    private void SetSpecialTileSOs(TileFrame currentTile)
+    {
+        temporarySpecialTileSOs.Clear();
+        temporaryTilesToAvoid.Clear();
+
+        if (!(currentTile.pos.x == 0 && currentTile.pos.y == 0))
+        {
+            if (currentTile.pos.x != 0)
+            {
+                temporaryTilesToAvoid.Add((tileFrames[currentTile.pos.x - 1, currentTile.pos.y].tile.GetTileSO().tileType, tileFrames[currentTile.pos.x - 1, currentTile.pos.y].tile.GetTileSO().valueId));
+            }
+
+            if (currentTile.pos.y != 0)
+            {
+                temporaryTilesToAvoid.Add((tileFrames[currentTile.pos.x, currentTile.pos.y - 1].tile.GetTileSO().tileType, tileFrames[currentTile.pos.x, currentTile.pos.y - 1].tile.GetTileSO().valueId));
+            }
+        }
+
+        for (int i = 0; i < tilesSO.Count; i++)
+        {
+            bool isTileAllowed = true;
+
+            for (int j = 0; j < temporaryTilesToAvoid.Count; j++)
+            {
+                if (tilesSO[i].tileType == temporaryTilesToAvoid[j].Item1 &&
+                    tilesSO[i].valueId == temporaryTilesToAvoid[j].Item2)
+                {
+                    isTileAllowed = false;
+                    break;
+                }
+            }
+
+            if (isTileAllowed)
+            {
+                temporarySpecialTileSOs.Add(tilesSO[i]);
+            }
+        }
     }
 }

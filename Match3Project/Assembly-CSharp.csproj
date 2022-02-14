@@ -764,9 +764,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
-      <Project>{1C9DF6F9-4417-5A07-031E-89A66B7F0DC5}</Project>
-      <Name>Assembly-CSharp-firstpass</Name>
+    <ProjectReference Include="DOTween.Modules.csproj">
+      <Project>{2647D82D-A24D-78FF-0845-00C8CF8F71D1}</Project>
+      <Name>DOTween.Modules</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
